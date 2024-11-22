@@ -51,3 +51,59 @@ select a.id, a.email, (select count(*) from post p where p.author_id=a.id) as po
 
 -- from 절 안에 서브쿼리    
 select a.name from ( select * from author) as a;
+
+-- 없어진 기록 찾기
+-- 서브쿼리
+-- 코드를 입력하세요
+SELECT OUTS.ANIMAL_ID, OUTS.NAME FROM ANIMAL_OUTS AS OUTS
+    WHERE OUTS.ANIMAL_ID NOT IN (SELECT INS.ANIMAL_ID FROM ANIMAL_INS AS INS);
+
+-- 집계함수 (null은 count에서 제외된다)
+select coutn(*) from author;
+select sum(price) from post;
+select avg(price) from post;
+-- 소수점 첫 번째 자리에서 반올림해서 소수점을 없앰
+select round(avg(price), 0) from post;
+
+-- group by : 그룹화된 데이터를 하나의 행(row)처럼 취급
+-- author_id로 그룹핑 하였으면, 그외의 컬럼을 조회하는 것은 적절치 않음
+select author_id from post group by author_id;
+
+-- group by와 집계함수
+-- 아래 쿼리에서 *은 그룹화된 데이터 내에서의 개수
+select author_id, count(*) from post group by author_id;
+select author_id, count(id), sum(price) from post group by author_id;
+
+-- author의 email과 author 별로 본인이 쓴 글의 개수를 출력
+select a.id, a.email, (select count(*) from post p where p.author_id=a.id) as post_count from author a order by a.id;
+-- join과 group by, 집계함수를 활용한 글의 개수 출력
+select author.id, author.name, author.email, count(post.id) as post_count from author
+	left join post on author.id=post.author_id
+	group by author.name order by author.id;
+
+-- where와 group by
+-- 연도별 post 글의 개수 출력, 연도가 null인 값은 제외
+select date_format(created_time, '%Y') as year, count(id) as post_count from post
+	where created_time is not null group by year
+    order by year desc;
+
+-- 자동차 종류 별 특정 옵션이 포함된 자동차 수 구하기
+-- 입양 시각 구하기(1)
+
+-- having : group by를 통해 나온 집계값에 대한 조건
+-- 글을 2개 이상 쓴 사람에 대한 정보 조회
+select author_id from post group by author_id having count(*)>=2;
+select author_id, count(*) as count from post group by author_id having count>=2;
+
+--동명 동물 수 찾기
+select NAME, count(*) as COUNT from ANIMAL_INS 
+where NAME is not null group by NAME having  count>=2 order by name;
+
+-- 다중열 group by
+-- post에서 작성자가 만든 제목의 개수를 출력하시오.
+select author_id, title, count(*) from post group by author_id, title;
+
+-- 재구매가 일어난 상품과 회원 리스트 구하기
+select user_id, product_id from ONLINE_SALE 
+group by user_id, product_id having count(*)>= 2 
+order by user_id asc, product_id desc;
